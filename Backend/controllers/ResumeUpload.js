@@ -2,7 +2,6 @@ import Resume from "../models/Resume.js";
 
 export const saveResume= async(req, res) =>{
     try{
-        const{email, resume}= req.body;
         const newResune= await Resume.create({
             email,
             resume
@@ -37,4 +36,20 @@ export const removeResume=async(req,res)=>{
     catch(err){
         res.status(500).json({message:"Server error"})
     }
-}
+};
+
+export const previewResume = async (req, res) => {
+  try {
+    const resume = await Resume.findOne({ user: req.user._id });
+
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    res.json({
+      resume: resume.resume, // ATS analyzed JSON
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to load resume" });
+  }
+};

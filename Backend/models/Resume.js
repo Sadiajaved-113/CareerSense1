@@ -1,16 +1,27 @@
-import mongoose  from "mongoose";
+import mongoose from "mongoose";
 
-const ResumeSchema= new mongoose.Schema({
-    email:{
-        type: String,
-        required: true,
-        unique: true
+const ResumeSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
     },
-    resume:{
-        type: Object,
-        required: true
+    resumeText: {
+      type: String,
+      required: true,
     },
-}
-)
+    category: {
+      type: String,
+    },
+    resumeFile: {
+  type: String,
+  required: true
+},
 
-export default mongoose.model("Resume", ResumeSchema)
+  },
+  { timestamps: true }
+);
+
+export default mongoose.model("Resume", ResumeSchema);

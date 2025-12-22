@@ -22,7 +22,7 @@ export default function Home() {
           <Link to="/upload">
             <button className="bg-blue-600 hover:bg-blue-700 text-white flex cursor-pointer items-center gap-2 py-3 px-6 rounded-full text-lg font-medium mb-4">
               <FaClipboardCheck />
-              Scan and Get ATS Score
+              Get Started
             </button>
           </Link>
           
