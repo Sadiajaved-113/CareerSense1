@@ -84,6 +84,58 @@ const ResumeUpload = () => {
     setLoading(false);
   };
 
+//   useEffect(() => {
+//   const checkExistingResume = async () => {
+//     try {
+//       const token = localStorage.getItem("token");
+
+//       const res = await axios.get(
+//         "http://localhost:4000/api/preview",
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+
+//       // ✅ Resume exists → directly show Dashboard
+//       setResult({
+//         category: res.data.resume.category,
+//         matches: [], // matches will be fetched on new upload
+//       });
+
+//     } catch (err) {
+//       // ❌ No resume → stay on upload UI
+//       console.log("No existing resume found");
+//     }
+//   };
+
+//   checkExistingResume();
+// }, []);
+
+useEffect(() => {
+  const loadPreviousResult = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(
+          "http://localhost:4000/api/resume/ats-result",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setResult(res.data); // 🔥 SAME FORMAT AS UPLOAD RESULT
+    } catch {
+      // No previous resume → show upload UI
+    }
+  };
+
+  loadPreviousResult();
+}, []);
+
+
+
   return (
     <div
       className="min-h-screen bg-cover bg-center flex items-center justify-center p-8 pt-20"

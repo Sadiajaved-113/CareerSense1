@@ -8,7 +8,7 @@ const jobSchema = new mongoose.Schema(
     location: { type: String, required: true },
     description: { type: String, required: true },
     category: { type: String }, 
-    salary: { type: Number },
+    salary: { type: Number, String },
     postedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }

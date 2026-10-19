@@ -5,7 +5,8 @@ import { preprocessText } from "../utils/nlpUtils.js";
 import { predictCategory } from "../utils/categoryPredictor.js";
 import { calculateATSScore } from "../utils/atsScorer.js";
 import { loadDataset } from "../utils/datasetLoader.js";
-
+import fs from "fs";
+import path from "path";
 
 let DATASET = null;
 
@@ -15,11 +16,35 @@ export const analyzeResume = async (req, res) => {
       return res.status(400).json({ message: "No resume uploaded" });
     }
 
-    const resumeText = await extractTextFromPDF(req.file.buffer);
-    if (!resumeText || resumeText.length < 50) {
-      return res.status(400).json({ message: "Invalid resume content" });
-    }
+    /* ================================
+       1️⃣ SAVE RESUME FILE
+    ================================= */
+    // const uploadDir = path.join("uploads", "resumes");
 
+    // if (!fs.existsSync(uploadDir)) {
+    //   fs.mkdirSync(uploadDir, { recursive: true });
+    // }
+
+    // const fileName = `${req.user._id}-${Date.now()}.pdf`;
+    // const filePath = path.join(uploadDir, fileName);
+
+    // fs.writeFileSync(filePath, req.file.buffer);
+
+    const uploadDir = path.join("uploads", "resumes");
+
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const fileName = `${req.user._id}-${Date.now()}.pdf`;
+const filePath = path.join(uploadDir, fileName);
+
+fs.writeFileSync(filePath, req.file.buffer);
+
+    /* ================================
+       2️⃣ ANALYZE RESUME
+    ================================= */
+    const resumeText = await extractTextFromPDF(req.file.buffer);
     const tokens = preprocessText(resumeText);
 
     if (!DATASET) {
@@ -28,45 +53,45 @@ export const analyzeResume = async (req, res) => {
 
     const category = predictCategory(tokens, DATASET);
 
-    await Resume.findOneAndUpdate(
-      { user: req.user._id },
-      {
-        resumeText,
-        category,
-        analyzedAt: new Date(),
-      },
-      { upsert: true, new: true }
-    );
-
     const jobs = await Job.find({
       $or: [
         { category: { $regex: category, $options: "i" } },
         { title: { $regex: category, $options: "i" } },
-        { description: { $regex: category, $options: "i" } },
       ],
     });
 
     const matches = jobs
-      .map(job => {
-        const atsScore = calculateATSScore(resumeText, job.description);
-        return { job, atsScore };
-      })
-      .filter(item => item.atsScore > 0) 
+      .map(job => ({
+        job: job._id,
+        atsScore: calculateATSScore(resumeText, job.description),
+      }))
+      .filter(m => m.atsScore > 0)
       .sort((a, b) => b.atsScore - a.atsScore);
 
-    return res.status(200).json({
-      success: true,
+    /* ================================
+       3️⃣ STORE RESULT + FILE PATH
+    ================================= */
+    await Resume.findOneAndUpdate(
+      { user: req.user._id },
+      {
+        category,
+        matches,
+        resumePath: filePath,
+      },
+      { upsert: true, new: true }
+    );
+
+    /* ================================
+       4️⃣ RESPONSE
+    ================================= */
+    res.status(200).json({
       category,
       matches,
-      totalJobsAnalyzed: jobs.length,
     });
 
   } catch (error) {
     console.error("Resume analysis error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Resume analysis failed",
-    });
+    res.status(500).json({ message: "Resume analysis failed" });
   }
 };
 

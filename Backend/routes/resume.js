@@ -1,15 +1,14 @@
 import express from "express";
-import { saveResume, getResumeByEmail, removeResume,previewResume } from "../controllers/ResumeUpload.js";
 import { protect } from "../middleware/authMiddlewares.js";
+import { viewResume } from "../controllers/viewResumeController.js";
+import { getMyATSResult } from "../controllers/ResumeUpload.js";
 
-const ResumeRouter = express.Router();
+const router = express.Router();
 
-ResumeRouter.post("/saveResume", protect, saveResume);
+// ATS result
+router.get("/resume/ats-result", protect, getMyATSResult);
 
-ResumeRouter.get("/getResume/:email", protect, getResumeByEmail);
+// View uploaded resume file
+router.get("/resume/view", protect, viewResume);
 
-ResumeRouter.delete("/deleteResume", protect, removeResume);
-
-ResumeRouter.get("/preview", protect, previewResume);
-
-export default ResumeRouter;
+export default router;
